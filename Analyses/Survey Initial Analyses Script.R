@@ -41,6 +41,10 @@ anova(fitglm, fitglm2, test="F")
 lmer1<-lmer(asin(leaf.pct.herb) ~ soil.no3.n + (1|site))
 summary(lmer1)
 
+#plot the results
+library(lattice)
+xyplot(fitted(lmer1)~soil.no3.n | site, groups=site, data=data, type=c('p','r'), auto.key=F)
+
 lmer2<-lmer(asin(leaf.pct.herb) ~ leaf.pct.n + (1|site))
 summary(lmer2)
 
@@ -59,16 +63,64 @@ help(coefplot2)
 lmer.leaf.n<-lmer(asin(leaf.pct.n) ~ soil.no3.n + (1|site))
 summary(lmer.leaf.n)
 
-#comparing models maybe? need to check with ashley. does having leaf pct n tell you 
-  #anything sig diff than without?
+#don't know what the hell i was doing here. don't pay attention to this.
+#comparing models maybe? does having leaf pct n tell you anything sig diff than without?
 lmer.leaf.n2<-lmer(asin(leaf.pct.n) ~ (1|site))
 summary(lmer.leaf.n2)
 anova(lmer.leaf.n, lmer.leaf.n2, test="F")
+
+
+#below is a series of simple lmers looking at the effect of one factor on leaf N, 
+  #with site as a random factor
+  #i don't think this is really relevant to the big picture, 
+  # but just want to get a handle on doing these
 
 #NOx have an effect on leaf n?
 lmer.leaf.n4<-lmer(asin(leaf.pct.n) ~ nox.yr.2013 + (1|site))
 summary(lmer.leaf.n4)
 
-#Does everything have an effect on leaf n?
-lmer.leaf.n5<-lmer(asin(leaf.pct.n) ~ pct.urban + soil.total.n + dbh.cm + leaf.pct.herb + (1|site))
+#NO3-N have an effect on leaf n?
+lmer.leaf.n8<-lmer(asin(leaf.pct.n) ~ soil.no3.n + (1|site))
+summary(lmer.leaf.n8)
+
+#NH4-N have an effect on leaf n?
+lmer.leaf.n9<-lmer(asin(leaf.pct.n) ~ soil.nh4.n + (1|site))
+summary(lmer.leaf.n9)
+
+#percent urban have an effect on leaf n?
+lmer.leaf.n10<-lmer(asin(leaf.pct.n) ~ pct.urban + (1|site))
+summary(lmer.leaf.n10)
+
+#NOx december have an effect on leaf n?
+lmer.leaf.n11<-lmer(asin(leaf.pct.n) ~ nox.dec_2013 + (1|site))
+summary(lmer.leaf.n11)
+
+#percent herbivory have an effect on leaf n? {adding data doesn't matter}
+lmer.leaf.n12<-lmer(asin(leaf.pct.n) ~ leaf.pct.herb + (1|site), data=data) 
+summary(lmer.leaf.n12)
+
+#dbh have an effect on leaf n?
+lmer.leaf.n13<-lmer(asin(leaf.pct.n) ~ dbh.cm + (1|site))
+summary(lmer.leaf.n13)
+
+
+#this is looking at the effects of soil n, dbh, and the interaction of soil N and dbh
+lmer.leaf.n5<- lmer(asin(leaf.pct.n) ~ dbh.cm * soil.total.n + (1|site), data=data)
 summary(lmer.leaf.n5)
+anova(lmer.leaf.n5)
+
+# change plus signs to * 
+#look at interactions, apply step to get rid of nonsignificant interactions first.
+  #then it will continue with 
+
+#Does everything have an effect on leaf n?
+lmer.leaf.n6<-lmer(asin(leaf.pct.n) ~ pct.urban + soil.total.n + dbh.cm + leaf.pct.herb + (1|site))
+summary(lmer.leaf.n6)
+anova(lmer.leaf.n6)
+
+#this adds in the p values
+library(lmerTest)
+
+#look up step further, the script below did not work 
+stepeq<-step(lmer.leaf.n6)
+stepeq
