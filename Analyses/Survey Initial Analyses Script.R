@@ -124,3 +124,15 @@ library(lmerTest)
 #look up step further, the script below did not work 
 stepeq<-step(lmer.leaf.n6)
 stepeq
+
+#investigating step further
+step1<-step(lmer.leaf.n6, ddf = "Satterthwaite", type = 3, alpha.random = 0.1, alpha.fixed = 0.05, 
+     reduce.fixed = TRUE, reduce.random = TRUE, fixed.calc = TRUE, lsmeans.calc = TRUE,
+     difflsmeans.calc = TRUE, test.effs = NULL,  keep.effs = NULL, data=data)
+summary(step1)
+#seems I need to remove NA values in order for it to work
+na.rm=TRUE
+
+#attempted to use step, which performs backward elimination of 
+#non-significant effects of linear mixed effects model
+#seeems to have not worked because the random effect of site was not significant.
