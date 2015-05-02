@@ -136,3 +136,8 @@ na.rm=TRUE
 #attempted to use step, which performs backward elimination of 
 #non-significant effects of linear mixed effects model
 #seeems to have not worked because the random effect of site was not significant.
+
+#05.02.15
+#read in data with new column
+data <- read.csv("../Data/survey.master.data.csv")
+attach(data)
