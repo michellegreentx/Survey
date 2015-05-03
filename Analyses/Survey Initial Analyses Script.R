@@ -182,3 +182,5 @@ boxplot(leaf.pct.herb∼factor(urban.rural),
         varwidth=TRUE, xlab="Urban / Rural",
         main="Boxplot of concentration conditional on\
         urban.rural", ylab="Leaf Herbivory", data=data)
+
+
