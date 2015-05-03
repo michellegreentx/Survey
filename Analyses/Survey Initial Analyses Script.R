@@ -137,7 +137,48 @@ na.rm=TRUE
 #non-significant effects of linear mixed effects model
 #seeems to have not worked because the random effect of site was not significant.
 
-#05.02.15
+#05.03.15
 #read in data with new column
 data <- read.csv("../Data/survey.master.data.csv")
 attach(data)
+
+#subset data based on category urban or rural
+urbandata <- subset (data, urban.rural->"1")
+
+ruraldata <- subset (data, urban.rural=="2")
+#why did I have to do an == in this line, but the arrow worked for 1?
+attach(urbandata)
+
+#correlation of vars
+cor(pct.urban, leaf.pct.n)
+cor(soil.no3.n, leaf.pct.n, use="complete")  #need to do use=complete so that it only
+  #uses the values and not the NAs
+na.rm=TRUE
+as.factor(data$urban.rural)
+
+#some dotcharts using all data splitting the vars by urban/rural category
+dotchart(data$leaf.pct.n,
+         groups=factor(data$urban.rural),
+         ylab="Soil NO3-N", xlab="Leaf N",
+         main="Cleveland dotplot", pch=data$soil.no3.n)
+
+attach(data)
+boxplot(leaf.pct.n∼factor(urban.rural),
+        varwidth=TRUE, xlab="Urban / Rural",
+        main="Boxplot of concentration conditional on\
+        urban.rural", ylab="Leaf N", data=data)
+
+boxplot(soil.no3.n∼factor(urban.rural),
+        varwidth=TRUE, xlab="Urban / Rural",
+        main="Boxplot of concentration conditional on\
+        urban.rural", ylab="Soil NO3-N", data=data)
+
+boxplot(soil.nh4.n∼factor(urban.rural),
+        varwidth=TRUE, xlab="Urban / Rural",
+        main="Boxplot of concentration conditional on\
+        urban.rural", ylab="Soil NH4-N", data=data)
+
+boxplot(leaf.pct.herb∼factor(urban.rural),
+        varwidth=TRUE, xlab="Urban / Rural",
+        main="Boxplot of concentration conditional on\
+        urban.rural", ylab="Leaf Herbivory", data=data)
