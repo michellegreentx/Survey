@@ -183,4 +183,19 @@ boxplot(leaf.pct.herb∼factor(urban.rural),
         main="Boxplot of concentration conditional on\
         urban.rural", ylab="Leaf Herbivory", data=data)
 
+#including date in lmer
+leaf.n<-lmer(asin(leaf.pct.n) ~ pct.urban + soil.total.n + dbh.cm + leaf.pct.herb + (1|date))
+summary(leaf.n)
+anova(leaf.n)
+#this only slightly improves the numbers from the lmer with site. nothing of value.
 
+
+leaf.n2<-lmer(asin(leaf.pct.n) ~ pct.urban + soil.total.n + dbh.cm + leaf.pct.herb + (1|date) + (1|site))
+summary(leaf.n2)
+anova(leaf.n2)
+
+leaf.n3<-lm(leaf.pct.herb ~ nox.yr.2013 + soil.no3.n + soil.nh4.n + pct.urban)
+anova(leaf.n3)
+
+#Concludsion - nothing affects leaf N
+#Next look into pct herbivory and other stuff
