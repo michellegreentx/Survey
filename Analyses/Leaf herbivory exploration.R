@@ -14,7 +14,7 @@ library(car)
 
 # Assessing Outliers
 outlierTest(leaf.herb.1) # Bonferonni p-value for most extreme obs
-qqPlot(leaf.herb.1, main="QQ Plot") #qq plot for studentized resid 
+qqPlot(leaf.herb.16, main="QQ Plot") #qq plot for studentized resid 
 leveragePlots(leaf.herb.1) # leverage plots
 
 # Normality of Residuals
@@ -84,7 +84,96 @@ summary(leaf.herb.14)
 #attempting same thing without arcsine transforming didn't change anything of note
 
 #tried using numbers instead of pcts for all % vars  - removed scale warnings.
-leaf.herb.16<-lmer(leaf.pct.herb.num ~ nox.yr.2013 + soil.no3.n + soil.nh4.n + pct.urban.num + 
-                     dbh.cm + leaf.pct.n.num + (1|site), data=all.data)
+leaf.herb.16<-lmer(qnorm(leaf.pct.herb) ~ nox.yr.2013 + soil.no3.n + soil.nh4.n + pct.urban + 
+                     dbh.cm + qnorm(leaf.pct.n) + (1|site), data=all.data)
 summary(leaf.herb.16)
+
+plot(fitted(leaf.herb.16), residuals(leaf.herb.16))
+hist(leaf.pct.herb.num)
+
+qnorm(leaf.pct.herb)
+
+#needed to replace 0 with 0.00001 in order to do inverse transformation 
+(leaf.pct.herb)->tleaf.pct.herb
+all.data[53,10]<- 0.00001
+
+
+sort(leaf.pct.herb)
+qnorm(leaf.pct.herb)->tleaf.pct.herb
+
+qpct.urban<-qnorm(pct.urban)
+qleaf.pct.n<-qnorm(leaf.pct.n)
+leaf.herb.17<-lmer(tleaf.pct.herb ~ nox.yr.2013 + soil.no3.n + soil.nh4.n + qpct.urban+ 
+                     dbh.cm + qleaf.pct.n + (1|site), data=all.data)
+summary(leaf.herb.17)
+plot(fitted(leaf.herb.17), residuals(leaf.herb.17))
+
+
+#do qq plot of lmer
+qqnorm(resid(leaf.herb.17)); qqline(resid(leaf.herb.17))
+############
+#influence analysis
+############
+all.data <- read.csv("../Data/survey.master.data.csv")
+attach(all.data)
+all.data[53,10]<- 0.00001
+#transforming two columns so that it will run in line smoothly in the lmer
+all.data[,15] <- qnorm(all.data[,15])
+all.data[,13] <- qnorm(all.data[,13])
+
+#inverse transform leaf.pct.herb
+all.data$leaf.pct.herb <- qnorm(all.data$leaf.pct.herb)
+
+#install.packages("influence.ME")
+library(influence.ME)
+# initial model without any data points removed
+leaf.herb.i0<-lmer(leaf.pct.herb ~ nox.yr.2013 + soil.no3.n + soil.nh4.n + pct.urban+ 
+                     dbh.cm + leaf.pct.n + (1|site), data=all.data)
+
+plot(influence(leaf.herb.i0, obs=T), which="cook")
+
+#to drop observations:
+# Cook's rule of thumb = if it's beyond 4/#observations, so in this case it's 0.075
+#there are 4 points beyond this, so start with removing the whackest (tree)
+
+#code to remove one row - new data <- old data [-c(row to remove),]
+all.data.out1<-all.data[-51,]
+
+#now rerun lmer without that one row
+leaf.herb.i1<-lmer(leaf.pct.herb ~ nox.yr.2013 + soil.no3.n + soil.nh4.n + pct.urban+ 
+                     dbh.cm + leaf.pct.n + (1|site), data=all.data.out1)
+
+plot(influence(leaf.herb.i1, obs=T), which="cook")
+#one far outlier(#46)
+
+all.data.out2<-all.data.out1[-46,]
+leaf.herb.i2<-lmer(leaf.pct.herb ~ nox.yr.2013 + soil.no3.n + soil.nh4.n + pct.urban+ 
+                     dbh.cm + leaf.pct.n + (1|site), data=all.data.out2)
+plot(influence(leaf.herb.i2, obs=T), which="cook") 
+
+
+all.data.out3<-all.data.out2[-46,]
+leaf.herb.i3<-lmer(leaf.pct.herb ~ nox.yr.2013 + soil.no3.n + soil.nh4.n + pct.urban+ 
+                     dbh.cm + leaf.pct.n + (1|site), data=all.data.out3)
+plot(influence(leaf.herb.i3, obs=T), which="cook") 
+
+all.data.out4<-all.data.out3[-44,]
+leaf.herb.i4<-lmer(leaf.pct.herb ~ nox.yr.2013 + soil.no3.n + soil.nh4.n + pct.urban+ 
+                     dbh.cm + leaf.pct.n + (1|site), data=all.data.out4)
+plot(influence(leaf.herb.i4, obs=T), which="cook") 
+
+all.data.out5<-all.data.out4[-45,]
+leaf.herb.i5<-lmer(leaf.pct.herb ~ nox.yr.2013 + soil.no3.n + soil.nh4.n + pct.urban+ 
+                     dbh.cm + leaf.pct.n + (1|site), data=all.data.out5)
+plot(influence(leaf.herb.i5, obs=T), which="cook") 
+
+
+library(coefplot2)
+
+#does this change coefficients?
+coefplot2(c(leaf.herb.i0, leaf.herb.i1, leaf.herb.i2, leaf.herb.i3, leaf.herb.i4, leaf.herb.i5), 
+            legend=TRUE) 
+#no, keep outliers in.
  
+summary(leaf.herb.i0)
+summary(leaf.herb.i5)
