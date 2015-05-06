@@ -78,3 +78,13 @@ stats::step(leaf.herb.1, direction="both")
 leaf.herb.14<-lmer(asin(leaf.pct.herb) ~ nox.yr.2013 + soil.no3.n + soil.nh4.n + asin(pct.urban) + 
                    dbh.cm + asin(leaf.pct.n) + (1|site), data=all.data)
 summary(leaf.herb.14)
+# everything is significant except leaf.pct.n, but it's almost significant
+# warning says that some predictor variables are on very different scales: consider rescaling
+
+#attempting same thing without arcsine transforming didn't change anything of note
+
+#tried using numbers instead of pcts for all % vars  - removed scale warnings.
+leaf.herb.16<-lmer(leaf.pct.herb.num ~ nox.yr.2013 + soil.no3.n + soil.nh4.n + pct.urban.num + 
+                     dbh.cm + leaf.pct.n.num + (1|site), data=all.data)
+summary(leaf.herb.16)
+ 
