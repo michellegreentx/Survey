@@ -135,6 +135,7 @@ library(influence.ME)
 # initial model without any data points removed
 leaf.herb.i0<-lmer(leaf.pct.herb ~ nox.yr.2013 + soil.no3.n + soil.nh4.n + pct.urban+ 
                      dbh.cm + leaf.pct.n + (1|site), data=all.data)
+summary(leaf.herb.i0)
 
 plot(influence(leaf.herb.i0, obs=T), which="cook")
 

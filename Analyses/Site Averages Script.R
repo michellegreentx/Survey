@@ -42,3 +42,7 @@ summary(mlr.site2)
 
 mlr.site<-lm(leaf.pct.n ~ dbh.cm + nox.yr.2013 + soil.nh4.n + soil.no3.n, data=site.data)
 summary(mlr.site)
+
+
+#plot pairs of vars
+plot(imp.site.data)
