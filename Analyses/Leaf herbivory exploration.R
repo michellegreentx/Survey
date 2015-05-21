@@ -133,8 +133,7 @@ all.data$leaf.pct.herb <- qnorm(all.data$leaf.pct.herb)
 #install.packages("influence.ME")
 library(influence.ME)
 # initial model without any data points removed
-leaf.herb.i0<-lmer(leaf.pct.herb ~ nox.yr.2013 + soil.no3.n + soil.nh4.n + pct.urban+ 
-                     dbh.cm + leaf.pct.n + (1|site), data=all.data)
+
 
 plot(influence(leaf.herb.i0, obs=T), which="cook")
 
@@ -183,3 +182,63 @@ coefplot2(c(leaf.herb.i0, leaf.herb.i1, leaf.herb.i2, leaf.herb.i3, leaf.herb.i4
  
 summary(leaf.herb.i0)
 summary(leaf.herb.i5)
+
+###################
+###################
+###################
+
+
+#05.20.15
+#Leaf Herbivory lmer and Leaf N lmer without any data transformations,and using percents x 100 to get
+#rid of scale warnings
+
+all.data <- read.csv("../Data/survey.master.data.csv")
+attach(all.data)
+all.data[53,10]<- 0.00001
+
+#initial working model
+leafherb.nums<- lmer(leaf.pct.herb.num ~ nox.yr.2013 + soil.no3.n + soil.nh4.n + pct.urban.num +
+                       dbh.cm + leaf.pct.n.num + (1 | site))
+summary(leafherb.nums)
+
+plot(fitted(leafherb.nums), residuals(leafherb.nums))
+
+#how correlated are NOx and urbanness?
+nox.urban.lm <- lm(nox.yr.2013 ~ pct.urban)
+summary(nox.urban.lm)
+#R-squared = .677, highly significant
+
+#removed pct.urban.num b/c it's highly correlated with nox.yr.2013
+leafherb.nums1<- lmer(leaf.pct.herb.num ~ nox.yr.2013 + soil.no3.n + soil.nh4.n + 
+                       dbh.cm + leaf.pct.n.num + (1 | site))
+summary(leafherb.nums1)
+
+plot(fitted(leafherb.nums1), residuals(leafherb.nums1))
+
+#removed nox.yr.2013 
+leafherb.nums2<- lmer(leaf.pct.herb.num ~ pct.urban.num + soil.no3.n + soil.nh4.n + 
+                       dbh.cm + leaf.pct.n.num + (1 | site))
+summary(leafherb.nums2)
+
+plot(fitted(leafherb.nums1), residuals(leafherb.nums1))
+
+
+
+#####
+#initial working model for leaf n
+leafn.nums<- lmer(leaf.pct.n.num ~ nox.yr.2013 + soil.no3.n + soil.nh4.n + leaf.pct.herb.num +
+                    dbh.cm + pct.urban.num + (1|site))
+summary(leafn.nums)
+plot(fitted(leafn.nums), residuals(leafn.nums))
+
+#with pct.urban.num removed
+leafn.nums1<- lmer(leaf.pct.n.num ~ nox.yr.2013 + soil.no3.n + soil.nh4.n + leaf.pct.herb.num +
+                    dbh.cm + (1|site))
+summary(leafn.nums1)
+plot(fitted(leafn.nums1), residuals(leafn.nums1))
+
+#with nox.yr.2013 removed
+leafn.nums2<- lmer(leaf.pct.n.num ~ pct.urban.num + soil.no3.n + soil.nh4.n + leaf.pct.herb.num +
+                     dbh.cm + (1|site))
+summary(leafn.nums2)
+plot(fitted(leafn.nums2), residuals(leafn.nums2))
