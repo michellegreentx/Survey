@@ -224,21 +224,115 @@ plot(fitted(leafherb.nums1), residuals(leafherb.nums1))
 
 
 
-#####
-#initial working model for leaf n
-leafn.nums<- lmer(leaf.pct.n.num ~ nox.yr.2013 + soil.no3.n + soil.nh4.n + leaf.pct.herb.num +
-                    dbh.cm + pct.urban.num + (1|site))
-summary(leafn.nums)
-plot(fitted(leafn.nums), residuals(leafn.nums))
+################################
+################################
+# Michelle Green
+# 06.05.15
+# Similar investigations with pcts asin(sqrt(x)) transformed
 
-#with pct.urban.num removed
-leafn.nums1<- lmer(leaf.pct.n.num ~ nox.yr.2013 + soil.no3.n + soil.nh4.n + leaf.pct.herb.num +
-                    dbh.cm + (1|site))
-summary(leafn.nums1)
-plot(fitted(leafn.nums1), residuals(leafn.nums1))
+leafherb.1 <- lmer((asin(sqrt(leaf.pct.herb))) ~ (asin(sqrt(pct.urban))) + (asin(sqrt(leaf.pct.n))) + 
+                          soil.no3.n + soil.nh4.n + soil.ca + (1|site))
+summary(leafherb.1)
+# soil.no3.n, soil.nh4.n, and soil.ca are all significant
 
-#with nox.yr.2013 removed
-leafn.nums2<- lmer(leaf.pct.n.num ~ pct.urban.num + soil.no3.n + soil.nh4.n + leaf.pct.herb.num +
-                     dbh.cm + (1|site))
-summary(leafn.nums2)
-plot(fitted(leafn.nums2), residuals(leafn.nums2))
+
+###############################
+###############################
+# Michelle Green
+# 06.10.15
+# Looking into ANCOVA; leaf N as a fxn of Nox with pH/Ca as covariate
+# using this to help me: http://www.uk.sagepub.com/dsur/study/DSUR%20Smart%20Alex-Labcoat%20Leni-Self%20Test%20Answers/DSUR%20Chapter%2011%20Web%20Material.pdf
+
+# read in data
+all.data <- read.csv("../Data/survey.master.data.csv")
+attach(all.data)
+
+all.data[53,11]<- 0.00001
+
+all.data[,15] <- asin(sqrt(all.data[,16]))
+all.data[,13] <- asin(sqrt(all.data[,14]))
+all.data[,10] <- asin(sqrt(all.data[,11]))
+
+library(ggplot2)
+
+# run anova to see whether the groups differ in their levels of leaf herbivory
+# without the covariate included
+anovamodel1 <- aov(leaf.pct.herb ~ nox.yr.2013, data = all.data)
+summary(anovamodel1)
+# p value 0.119, no they do not differ
+
+#boxplot - this is insane b/c each value of Ca is getting it's own plot
+boxplot <- ggplot(all.data, aes(nox.yr.2013, leaf.pct.herb))
+boxplot + geom_boxplot() + facet_wrap(~soil.ca) + labs(x="NOx", y="Leaf Herbivory")
+
+#convert Ca into factor with 4 groups based on quartiles
+soil.ca.gp<-factor(soil.ca.gp,levels = c(1:4), labels = c("1Q", "2Q", "3Q", "4Q"))
+
+# try boxplot now
+boxplot <- ggplot(all.data, aes(nox.yr.2013, leaf.pct.herb))
+boxplot + geom_boxplot() + facet_wrap(~soil.ca.gp) + labs(x="NOx", y="Leaf Herbivory")
+#not sure if this is a good plot or not? maybe converting nox into groups is good too?
+
+# convert nox.yr.2013 into factor with 4 groups based on quartiles
+nox.yr.2013.gp<-factor(nox.yr.2013.gp,levels = c(1:4), labels = c("Nox1Q", "Nox2Q", "Nox3Q", "Nox4Q"))
+
+# try boxplot again
+boxplot <- ggplot(all.data, aes(nox.yr.2013.gp, leaf.pct.herb))
+boxplot + geom_boxplot() + facet_wrap(~soil.ca.gp) + labs(x="NOx", y="Leaf Herbivory")
+
+library(car)
+ 
+# doing Levene's test to see whether the variance in leaf herb varies across the
+# interaction of different groups experiencing different Ca levels and the
+# level of NOx 
+leveneTest(leaf.pct.herb, interaction(soil.ca.gp, nox.yr.2013), center=median)
+# p value = 0.1178, which means that the assumption of homogeneity of variance is NOT violated
+
+# conduct anova to test whether Ca (covariate) is independent of NOx (indep var)
+checkindepmodel<- aov(soil.ca.gp ~ nox.yr.2013, data=all.data)
+summary(checkindepmodel)
+# p value = 0.048, which means that the soil.ca.gp is significantly different among nox values
+# this means it's inappropriate to use soil.ca.gp as a covariate ??
+
+# but if I use the nox.yr.2013.gp, then it's not significant
+checkindepmodel2<- aov(soil.ca.gp ~ nox.yr.2013.gp, data=all.data)
+summary(checkindepmodel2)
+# p value = 0.066
+
+#trying ancova anyway with soil.ca.gp
+contrasts(soil.ca.gp)<-(-1,1)
+leafherbancova.1<-aov(leaf.pct.herb ~ nox.yr.2013.gp + soil.ca.gp, data=all.data)
+Anova(leafherbancova.1, type = "III")
+#Response: leaf.pct.herb
+#Sum Sq Df F value  Pr(>F)   
+#(Intercept)    0.001222  1  0.2272 0.63558   
+#nox.yr.2013.gp 0.002545  1  0.4734 0.49450   
+#soil.ca.gp     0.049812  1  9.2647 0.00366 **
+#  Residuals      0.279584 52
+# Sooo.... nox is not important but soil.ca is?
+
+#trying without soil.ca in groups, even more significant
+contrasts(soil.ca)<-(-1,1)
+leafherbancova.2<-aov(leaf.pct.herb ~ nox.yr.2013 + soil.ca, data=all.data)
+Anova(leafherbancova.2, type = "III")
+#Response: leaf.pct.herb
+#Sum Sq Df F value    Pr(>F)    
+#(Intercept) 0.001242  1  0.2787    0.5998    
+#nox.yr.2013 0.003951  1  0.8869    0.3507    
+#soil.ca     0.094684  1 21.2556 2.648e-05 ***
+  #Residuals   0.231636 52 
+
+# Soooooo.... go back and add Ca into my original mixed model equation for herbivory?
+leafherb.2 <- lmer(leaf.pct.herb ~ pct.urban + leaf.pct.n + 
+                     soil.no3.n + soil.nh4.n + soil.ca + (1|site))
+summary(leafherb.2)
+
+#scatter plot of leaf herb as a function of soil ca
+scatter <- ggplot(all.data, aes(soil.ca, leaf.pct.herb))
+scatter + geom_point(size=3) + geom_smooth(method = "lm", alpha=0.1) +
+  labs(x = "Soil Ca", y = "Leaf Herbivory")
+
+#scatter plot of soil no3-n as a function of soil ca
+scatter2 <- ggplot(all.data, aes(soil.ca, soil.no3.n))
+scatter2 + geom_point(size=3) + geom_smooth(method = "lm", alpha=0.1) +
+  labs(x = "Soil Ca", y = "Soil NO3-N")
