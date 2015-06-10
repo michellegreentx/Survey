@@ -18,6 +18,30 @@ leaf.n.1<-lmer(leaf.pct.n ~ nox.yr.2013 + soil.no3.n + soil.nh4.n + pct.urban +
                      dbh.cm + leaf.pct.herb + (1|site), data=all.data)
 summary(leaf.n.1)
 
+##########################
+# Did at some point in between above and below
+
+#####
+#initial working model for leaf n
+leafn.nums<- lmer(leaf.pct.n.num ~ nox.yr.2013 + soil.no3.n + soil.nh4.n + leaf.pct.herb.num +
+                    dbh.cm + pct.urban.num + (1|site))
+summary(leafn.nums)
+plot(fitted(leafn.nums), residuals(leafn.nums))
+
+#with pct.urban.num removed
+leafn.nums1<- lmer(leaf.pct.n.num ~ nox.yr.2013 + soil.no3.n + soil.nh4.n + leaf.pct.herb.num +
+                     dbh.cm + (1|site))
+summary(leafn.nums1)
+plot(fitted(leafn.nums1), residuals(leafn.nums1))
+
+#with nox.yr.2013 removed
+leafn.nums2<- lmer(leaf.pct.n.num ~ pct.urban.num + soil.no3.n + soil.nh4.n + leaf.pct.herb.num +
+                     dbh.cm + (1|site))
+summary(leafn.nums2)
+plot(fitted(leafn.nums2), residuals(leafn.nums2))
+
+
+
 ########################
 # Michelle green
 # 06.03.15
