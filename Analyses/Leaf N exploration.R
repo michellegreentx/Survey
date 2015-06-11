@@ -8,7 +8,7 @@ all.data <- read.csv("../Data/survey.master.data.csv")
 attach(all.data)
 
 all.data[53,10]<- 0.00001
-
+#these column numbers need to be changed b/c i added a couple of columns
 all.data[,15] <- log(all.data[,15])
 all.data[,13] <- log(all.data[,13])
 all.data[,10] <- log(all.data[,10])

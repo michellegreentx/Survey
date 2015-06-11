@@ -249,9 +249,9 @@ attach(all.data)
 
 all.data[53,11]<- 0.00001
 
-all.data[,15] <- asin(sqrt(all.data[,16]))
-all.data[,13] <- asin(sqrt(all.data[,14]))
-all.data[,10] <- asin(sqrt(all.data[,11]))
+all.data[,16] <- asin(sqrt(all.data[,16]))
+all.data[,14] <- asin(sqrt(all.data[,14]))
+all.data[,11] <- asin(sqrt(all.data[,11]))
 
 library(ggplot2)
 
@@ -327,6 +327,22 @@ leafherb.2 <- lmer(leaf.pct.herb ~ pct.urban + leaf.pct.n +
                      soil.no3.n + soil.nh4.n + soil.ca + (1|site))
 summary(leafherb.2)
 
+leafherb.3 <- lmer(leaf.pct.herb ~ pct.urban + leaf.pct.n + 
+                     soil.no3.n + soil.nh4.n + soil.ca + soil.p + (1|site))
+summary(leafherb.3)
+# soil.p isn't significant
+
+# So the only important things are Ca, NO3, and NH4
+# So the model for things that influence leaf herbivory is:
+leafherb.lmer.final <- lmer(leaf.pct.herb ~ soil.no3.n + soil.nh4.n + soil.ca + (1|site))
+summary(leafherb.lmer.final)
+
+#residuals evenly distributed?
+
+qqnorm(resid(leafherb.lmer.final))
+qqline(resid(leafherb.lmer.final))
+
+
 #scatter plot of leaf herb as a function of soil ca
 scatter <- ggplot(all.data, aes(soil.ca, leaf.pct.herb))
 scatter + geom_point(size=3) + geom_smooth(method = "lm", alpha=0.1) +
@@ -336,3 +352,20 @@ scatter + geom_point(size=3) + geom_smooth(method = "lm", alpha=0.1) +
 scatter2 <- ggplot(all.data, aes(soil.ca, soil.no3.n))
 scatter2 + geom_point(size=3) + geom_smooth(method = "lm", alpha=0.1) +
   labs(x = "Soil Ca", y = "Soil NO3-N")
+
+## attempting to do a stepwise regression now that I know ca is also important
+#had to do "stats::" in order to make it go back to stats step
+leafherb.4 <- lm(leaf.pct.herb ~ pct.urban + leaf.pct.n + 
+                   soil.no3.n + soil.nh4.n + soil.ca)
+stats::step(leafherb.4, direction="backward")
+coefficients(leafherb.4)
+# model suggested by backward stepwise
+stepmodelbck<- lm(leaf.pct.herb ~ soil.no3.n + soil.nh4.n + soil.ca)
+summary(stepmodelbck)
+
+# compare models: original (leafherb.4) vs. suggested by stepwise (stepmodelbck)
+anova(leafherb.4, stepmodelbck)
+
+leafherb.5 <- lm(leaf.pct.herb ~ pct.urban + leaf.pct.n + 
+                   soil.no3.n + soil.nh4.n + soil.ca)
+summary(leafherb.5)

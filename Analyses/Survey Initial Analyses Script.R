@@ -136,6 +136,7 @@ na.rm=TRUE
 #attempted to use step, which performs backward elimination of 
 #non-significant effects of linear mixed effects model
 #seeems to have not worked because the random effect of site was not significant.
+#No, wasn't working b/c step was masked
 
 #05.03.15
 #read in data with new column
